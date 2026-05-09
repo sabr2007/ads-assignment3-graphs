@@ -1,3 +1,5 @@
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 public class Experiment {
@@ -18,7 +20,7 @@ public class Experiment {
         }
 
 
-        Random rand = new Random(42);
+        Random rand = new Random(7);
         int edgesAdded = numVertices - 1;
         while (edgesAdded < numEdges) {
             int from = rand.nextInt(numVertices);
@@ -35,6 +37,13 @@ public class Experiment {
     public void runTraversals(Graph g, int sizeIndex) {
         int iterations = 1000;
 
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(OutputStream.nullOutputStream()));
+
+        for (int i = 0; i < 200; i++) {
+            g.bfs(0);
+            g.dfs(0);
+        }
 
         long bfsStart = System.nanoTime();
         for (int i = 0; i < iterations; i++) {
@@ -50,6 +59,8 @@ public class Experiment {
         }
         long dfsEnd = System.nanoTime();
         dfsTimes[sizeIndex] = (dfsEnd - dfsStart) / iterations;
+
+        System.setOut(originalOut);
     }
 
     public void runMultipleTests() {
