@@ -55,13 +55,13 @@ public class Experiment {
     public void runMultipleTests() {
         for (int i = 0; i < sizes.length; i++) {
             int v = sizes[i];
-            Graph g = generateGraph(v, 2 * v); // E ≈ 2V
+            Graph g = generateGraph(v, 2 * v);
             runTraversals(g, i);
         }
     }
 
     public void printResults() {
-        System.out.println("\nperformance results");
+        System.out.println("\nperformance results: ");
         System.out.printf("%-10s %-15s %-15s%n", "Vertices", "BFS (ns)", "DFS (ns)");
         for (int i = 0; i < sizes.length; i++) {
             System.out.printf("%-10d %-15d %-15d%n", sizes[i], bfsTimes[i], dfsTimes[i]);
