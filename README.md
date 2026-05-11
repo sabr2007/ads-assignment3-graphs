@@ -25,17 +25,16 @@ Wraps a single integer id. Constructor, getter, toString() that returns "V(id)" 
 
 ### Edge
 
-Holds source and destination as Vertex objects (not raw ints). Constructor, getters, toString(). Not used directly in traversal logic since adjacency list stores neighbors as id lists, but kept as a separate class to satisfy the OOP requirement.
+Holds source and destination as Vertex objects (not raw ints). Constructor, getters, toString(). 
 
 ### Graph
 
 Core class. Two maps inside:
-- `vertices` maps id to the Vertex object
-- `adjList` maps id to a list of neighbor ids
+- vertices maps id to the Vertex object
+- adjList maps id to a list of neighbor ids
 
-Since the graph is undirected, `addEdge(from, to)` adds the connection in both directions puts `to` into `adjList[from]` AND `from` into `adjList[to]`. That symmetry is what makes it undirected.
+Since the graph is undirected, addEdge(from, to) adds the connection in both directions puts to into adjList[from] AND from into adjList[to]. That symmetry is what makes it undirected.
 
-Why adjacency list and not a matrix: real graphs are usually sparse. Memory is O(V + E) instead of O(V²). For V=100 with ~200 edges, the list uses around 300 cells, the matrix would burn 10000.
 
 ### Experiment
 
@@ -83,7 +82,7 @@ Goes as deep as possible down one branch before backtracking. Implemented recurs
 
 ## Experimental Results
 
-All times in nanoseconds, averaged over 1000 iterations per measurement, with 200 warmup iterations before each timing loop. Edge count = 2*V for all tests. System.out was redirected to a null stream during timing so console IO doesn't pollute the numbers.
+All times in nanoseconds, averaged over 1000 iterations per measurement. Edge count = 2*V for all tests.
 
 | Vertices | Edges | BFS (ns) | DFS (ns) |
 |----------|-------|----------|----------|
@@ -93,7 +92,6 @@ All times in nanoseconds, averaged over 1000 iterations per measurement, with 20
 
 ### Demo graph output (V=6, manual edges)
 
-```
 graph structure:
 0 -> [1, 2]
 1 -> [0, 3]
@@ -103,7 +101,6 @@ graph structure:
 5 -> [3]
 BFS order: 0 1 2 3 4 5
 DFS order: 0 1 3 5 2 4
-```
 
 You can clearly see the difference. BFS goes 0, then everyone at distance 1 (1, 2), then distance 2 (3, 4), then distance 3 (5). DFS goes deep first 0 to 1 to 3 to 5 to dead end, backtrack all the way up, then 2 to 4.
 
@@ -133,7 +130,7 @@ Three big ones. First, no shortest-path guarantee in unweighted graphs DFS finds
 
 ## Reflection
 
-The experiment looked simple on paper "run BFS and DFS, time them" but most of the time went into making the timer actually measure the algorithm. First runs had System.out.print inside the traversal methods, called 1000 times per measurement. Numbers were 5× higher than they should have been and showed weird non-monotonic patterns (V=30 sometimes slower than V=100, DFS suddenly losing to BFS by 2×). I was measuring terminal speed, not algorithms. Disabling System.out via setOut during the timing loop fixed that immediately.
+The experiment looked simple on paper "run BFS and DFS, time them" but most of the time went into making the timer actually measure the algorithm. First runs had System.out.print inside the traversal methods, called 1000 times per measurement. Numbers were 5× higher than they should have been and showed weird non-monotonic patterns (V=30 sometimes slower than V=100, DFS suddenly losing to BFS by 2×). Disabling System.out via setOut during the timing loop fixed that immediately.
 
 Then JIT warmup. The first sized tested (V=10) was always slower than V=30, which makes no sense for O(V+E) until you remember the JVM runs interpreted bytecode for the first ~hundred invocations before the JIT compiler kicks in. Adding 200 warmup iterations before each timing run made the numbers monotonically increase with V like theory expects. Same JIT trick I had to figure out in Assignment 2 with Binary Search.
 
