@@ -135,3 +135,76 @@ The experiment looked simple on paper "run BFS and DFS, time them" but most of t
 Then JIT warmup. The first sized tested (V=10) was always slower than V=30, which makes no sense for O(V+E) until you remember the JVM runs interpreted bytecode for the first ~hundred invocations before the JIT compiler kicks in. Adding 200 warmup iterations before each timing run made the numbers monotonically increase with V like theory expects. Same JIT trick I had to figure out in Assignment 2 with Binary Search.
 
 The actual algorithmic insight is that Big-O is the same for BFS and DFS but real performance crosses over depending on V. On small graphs DFS wins because recursion is cheaper than queue management. On bigger graphs BFS wins because stack frames cost more than ArrayDeque pops. None of that is in the textbook complexity it only shows up when you actually run the code and look honestly at what the numbers say.
+
+---
+
+## Bonus Task: Dijkstra's Algorithm
+
+Extension of the same project that adds edge weights and computes single-source shortest paths.
+
+### What changed in the existing classes
+
+**Edge**
+Added a weight field plus a constructor `Edge(Vertex source, Vertex destination, int weight)`. The old `Edge(source, destination)` constructor is kept and forwards to the new one with weight=1, so nothing in the rest of the code breaks.
+
+**Graph**
+Adjacency list type went from `Map<Integer, List<Integer>>` (neighbor ids) to `Map<Integer, List<Edge>>` (full edge objects). `addEdge(from, to)` still works as before and stores edges with weight=1. New overload `addEdge(from, to, weight)` stores weighted edges. Since the graph is undirected, both directions get an Edge with the same weight.
+
+BFS and DFS still work without changes to their logic they just iterate `Edge` objects now and pull the destination id from each edge. Tested on the original demo graph and got the same BFS/DFS order as before (0 1 2 3 4 5 / 0 1 3 5 2 4) so the refactor did not break anything.
+
+### Dijkstra implementation
+
+Method signature: `void dijkstra(int start)`. No priority queue, just two arrays and simple loops as the assignment suggested.
+
+How it works:
+1. dist[] of size n, filled with Integer.MAX_VALUE, then dist[start] = 0
+2. visited[] of size n, all false
+3. Repeat n times:
+   - Scan the dist array to find the unvisited vertex u with the smallest current dist
+   - If no such vertex exists (everything reachable is already visited), break
+   - Mark u visited
+   - For every edge out of u, relax: if dist[u] + weight < dist[v] then dist[v] = dist[u] + weight
+4. Print the distance array
+
+The inner "find the min" loop is the part a priority queue would normally speed up. Without it the complexity is O(V²) instead of O((V+E) log V), which is fine for the small graphs here and matches what the task description asks for.
+
+One assumption: vertex ids are 0..n-1 so they can be used as array indices. The whole project already uses sequential ids (Main builds 0..5, Experiment builds 0..V-1), so this fits the existing convention.
+
+### Weighted demo graph
+
+Same six vertices as before, but now with edge weights:
+
+| from | to | weight |
+|------|----|--------|
+| 0    | 1  | 4      |
+| 0    | 2  | 1      |
+| 2    | 1  | 2      |
+| 1    | 3  | 1      |
+| 2    | 3  | 5      |
+| 3    | 4  | 3      |
+| 4    | 5  | 2      |
+
+Console output for `dijkstra(0)`:
+
+weighted demo graph:
+0 -> [1(w=4), 2(w=1)]
+1 -> [0(w=4), 2(w=2), 3(w=1)]
+2 -> [0(w=1), 1(w=2), 3(w=5)]
+3 -> [1(w=1), 2(w=5), 4(w=3)]
+4 -> [3(w=3), 5(w=2)]
+5 -> [4(w=2)]
+Dijkstra from 0:
+  to 0: 0
+  to 1: 3
+  to 2: 1
+  to 3: 4
+  to 4: 7
+  to 5: 9
+
+Quick sanity check on vertex 1. Direct edge 0->1 has weight 4. But going 0->2->1 costs 1+2=3, which is shorter. Dijkstra finds that 3, not the direct 4. For vertex 5 the only way in is through 4, and the cheapest path to 4 is 0->2->1->3->4 = 1+2+1+3 = 7, plus 2 to reach 5 = 9. Matches the output.
+
+### Notes on the bonus
+
+Implementing Dijkstra after BFS made the difference between weighted and unweighted shortest paths concrete. BFS finds shortest paths in terms of edge count, which is exactly Dijkstra with all weights equal to 1 (and indeed if I call dijkstra on the original unweighted demo graph where every edge defaults to weight 1, the distances match the BFS levels). The "always pick the closest unvisited vertex" greedy step is what BFS does too, just with a queue because all distances are equal so FIFO order is enough.
+
+The O(V²) version without a priority queue is also a good reminder that Big-O is not the whole story for small inputs. For V=6 the linear scan inside the loop is faster than allocating and maintaining a heap.
