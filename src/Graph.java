@@ -2,7 +2,7 @@ import java.util.*;
 
 public class Graph {
     private Map<Integer, Vertex> vertices;
-    private Map<Integer, List<Integer>> adjList;
+    private Map<Integer, List<Edge>> adjList;
 
     public Graph() {
         this.vertices = new HashMap<>();
@@ -19,16 +19,41 @@ public class Graph {
     }
 
     public void addEdge(int from, int to) {
+        addEdge(from, to, 1);
+    }
+
+    public void addEdge(int from, int to, int weight) {
         if (!vertices.containsKey(from) || !vertices.containsKey(to)) {
             throw new IllegalArgumentException("vertex not found");
         }
-        adjList.get(from).add(to);
-        adjList.get(to).add(from);
+        Vertex fromV = vertices.get(from);
+        Vertex toV = vertices.get(to);
+        adjList.get(from).add(new Edge(fromV, toV, weight));
+        adjList.get(to).add(new Edge(toV, fromV, weight));
     }
 
     public void printGraph() {
         for (Integer id : adjList.keySet()) {
-            System.out.println(id + " -> " + adjList.get(id));
+            List<Integer> neighbors = new ArrayList<>();
+            for (Edge e : adjList.get(id)) {
+                neighbors.add(e.getDestination().getId());
+            }
+            System.out.println(id + " -> " + neighbors);
+        }
+    }
+
+    public void printWeightedGraph() {
+        for (Integer id : adjList.keySet()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(id).append(" -> [");
+            List<Edge> edges = adjList.get(id);
+            for (int i = 0; i < edges.size(); i++) {
+                Edge e = edges.get(i);
+                sb.append(e.getDestination().getId()).append("(w=").append(e.getWeight()).append(")");
+                if (i < edges.size() - 1) sb.append(", ");
+            }
+            sb.append("]");
+            System.out.println(sb);
         }
     }
 
@@ -51,7 +76,8 @@ public class Graph {
             int current = queue.poll();
             System.out.print(current + " ");
 
-            for (Integer neighbor : adjList.get(current)) {
+            for (Edge e : adjList.get(current)) {
+                int neighbor = e.getDestination().getId();
                 if (!visited.contains(neighbor)) {
                     visited.add(neighbor);
                     queue.add(neighbor);
@@ -77,7 +103,8 @@ public class Graph {
         visited.add(current);
         System.out.print(current + " ");
 
-        for (Integer neighbor : adjList.get(current)) {
+        for (Edge e : adjList.get(current)) {
+            int neighbor = e.getDestination().getId();
             if (!visited.contains(neighbor)) {
                 dfsHelper(neighbor, visited);
             }
