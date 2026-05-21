@@ -110,4 +110,48 @@ public class Graph {
             }
         }
     }
+
+    public void dijkstra(int start) {
+        if (!vertices.containsKey(start)) {
+            System.out.println("vertex not found");
+            return;
+        }
+
+        int n = vertices.size();
+        int[] dist = new int[n];
+        boolean[] visited = new boolean[n];
+
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        dist[start] = 0;
+
+        for (int i = 0; i < n; i++) {
+            int u = -1;
+            int minDist = Integer.MAX_VALUE;
+            for (int v = 0; v < n; v++) {
+                if (!visited[v] && dist[v] < minDist) {
+                    minDist = dist[v];
+                    u = v;
+                }
+            }
+            if (u == -1) break;
+            visited[u] = true;
+
+            for (Edge e : adjList.get(u)) {
+                int v = e.getDestination().getId();
+                int w = e.getWeight();
+                if (!visited[v] && dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                }
+            }
+        }
+
+        System.out.println("Dijkstra from " + start + ":");
+        for (int i = 0; i < n; i++) {
+            if (dist[i] == Integer.MAX_VALUE) {
+                System.out.println("  to " + i + ": unreachable");
+            } else {
+                System.out.println("  to " + i + ": " + dist[i]);
+            }
+        }
+    }
 }
